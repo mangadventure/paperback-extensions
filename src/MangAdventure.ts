@@ -117,97 +117,104 @@ export abstract class MangAdventure extends Source {
 
     /** @inheritDoc */
     searchRequest(query: SearchRequest, metadata: any): Promise<PagedResults> {
+        if (metadata?.last === true)
+            return Promise.resolve(createPagedResults({results: []}))
         const page = (metadata?.page ?? 0) + 1
-        const search = new URLSearchParams({'page': page.toString()})
-        if (query.title) search.set('title', query.title)
-        if (query.author) search.set('author', query.author)
-        if (query.artist) search.set('artist', query.artist)
+        const params = new URLSearchParams({'page': page.toString()})
+        if (query.title) params.set('title', query.title)
+        if (query.author) params.set('author', query.author)
+        if (query.artist) params.set('artist', query.artist)
         if (query.status == MangaStatus.COMPLETED)
-            search.set('status', 'completed')
+            params.set('status', 'completed')
         else if (query.status == MangaStatus.ONGOING)
-            search.set('status', 'ongoing')
+            params.set('status', 'ongoing')
         let genres: string[] = []
         if (query.includeGenre) genres = genres.concat(query.includeGenre)
         if (query.excludeGenre) genres = genres.concat(query.excludeGenre.map(g => '-' + g))
         // if (query.hStatus !== undefined) genres.push((query.hStatus ? '' : '-') + 'Hentai')
-        if (genres) search.set('categories', genres.join(','))
-        const request = createRequestObject({
-            url: `${this.apiUrl}/series?${search}`, method
-        })
-        return this.requestManager.schedule(request, 1)
-            .then(res => this.parseResponse<IPaginator<ISeries>>(res))
-            .then(data => data.last ? createPagedResults({results: []}) :
-                createPagedResults({
-                    results: data.results.map(series => createMangaTile({
-                        id: series.slug,
-                        image: series.cover,
-                        title: createIconText({text: series.title})
-                    })),
-                    metadata: {page}
-                }))
-    }
-
-    /** @inheritDoc */
-    override getWebsiteMangaDirectory(metadata: any): Promise<PagedResults> {
-        const page = (metadata?.page ?? 0) + 1
-        const request = createRequestObject({
-            url: `${this.apiUrl}/series?page=${page}`, method
-        })
-        return this.requestManager.schedule(request, 1)
-            .then(res => this.parseResponse<IPaginator<ISeries>>(res))
-            .then(data => data.last ? createPagedResults({results: []}) :
-                createPagedResults({
-                    results: data.results.map(series => createMangaTile({
-                        id: series.slug,
-                        image: series.cover,
-                        title: createIconText({text: series.title})
-                    })),
-                    metadata: {page}
-                }))
+        if (genres.length > 0) params.set('categories', genres.join(','))
+        return this.getViewMoreItems('title', {params, page: page.toString()})
     }
 
     /** @inheritDoc */
     override async getHomePageSections(sectionCallback: (section: HomeSection) => void): Promise<void> {
-        const section = createHomeSection({
-            id: 'all',
-            title: 'All Series',
-            view_more: true
+        const sections = [
+            createHomeSection({
+                id: 'title',
+                title: 'All Series',
+                view_more: true
+            }),
+            createHomeSection({
+                id: '-latest_update',
+                title: 'Latest Updates',
+                view_more: true
+            })
+        ]
+        const promises = sections.map(s => {
+            sectionCallback(s)
+            const request = createRequestObject({
+                url: `${this.apiUrl}/series?sort=${s.id}`, method
+            })
+            return this.requestManager.schedule(request, 1)
+                .then(res => this.parseResponse<IPaginator<ISeries>>(res))
+                .then(data => {
+                    s.items = data.results.map(series => createMangaTile({
+                        id: series.slug,
+                        image: series.cover,
+                        title: createIconText({text: series.title})
+                    }))
+                    return sectionCallback(s)
+                })
         })
-        sectionCallback(section)
-        const request = createRequestObject({
-            url: `${this.apiUrl}/series`, method
-        })
-        const response = await this.requestManager.schedule(request, 1)
-        const data: IPaginator<ISeries> = this.parseResponse(response)
-        section.items = data.results.map(series => createMangaTile({
-            id: series.slug,
-            image: series.cover,
-            title: createIconText({text: series.title})
-        }))
-        sectionCallback(section)
+        await Promise.all(promises)
     }
 
     /** @inheritDoc */
     override getViewMoreItems(homepageSectionId: string, metadata: any): Promise<PagedResults> {
-        return this.getWebsiteMangaDirectory(metadata)
+        if (metadata?.last === true)
+            return Promise.resolve(createPagedResults({results: []}))
+        const page = (metadata?.page ?? 0) + 1
+        const params = new URLSearchParams(metadata.params ?? {
+            page: page.toString(), sort: homepageSectionId
+        })
+        const request = createRequestObject({
+            url: `${this.apiUrl}/series?${params}`, method
+        })
+        return this.requestManager.schedule(request, 1)
+            .then(res => this.parseResponse<IPaginator<ISeries>>(res))
+            .then(data => createPagedResults({
+                results: data.results.map(series => createMangaTile({
+                    id: series.slug,
+                    image: series.cover,
+                    title: createIconText({text: series.title})
+                })),
+                metadata: {page, last: data.last}
+            }))
     }
 
     /** @inheritDoc */
-    override async getTags(): Promise<TagSection[]> {
-        if (this.categories) return [this.categories]
+    override getWebsiteMangaDirectory(metadata: any): Promise<PagedResults> {
+        return this.getViewMoreItems('title', metadata)
+    }
+
+    /** @inheritDoc */
+    override getTags(): Promise<TagSection[]> {
+        if (this.categories) return Promise.resolve([this.categories])
         const request = createRequestObject({
             url: `${this.apiUrl}/categories`, method
         })
-        const response = await this.requestManager.schedule(request, 1)
-        const data: IResults<ICategory> = this.parseResponse(response)
-        this.categories = createTagSection({
-            id: 'categories',
-            label: 'Categories',
-            tags: data.results.map(c => createTag({
-                id: c.name, label: c.name
-            }))
-        })
-        return [this.categories]
+        return this.requestManager.schedule(request, 1)
+            .then(res => this.parseResponse<IResults<ICategory>>(res))
+            .then(data => {
+                this.categories = createTagSection({
+                    id: 'categories',
+                    label: 'Categories',
+                    tags: data.results.map(c => createTag({
+                        id: c.name, label: c.name
+                    }))
+                })
+                return [this.categories]
+            })
     }
 
     /** @inheritDoc */
@@ -227,5 +234,5 @@ export abstract class MangAdventure extends Source {
     }
 
     /** The version of the extension. */
-    static readonly version: string = '0.1.5'
+    static readonly version: string = '0.1.6'
 }
