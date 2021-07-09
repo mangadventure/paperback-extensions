@@ -6,23 +6,23 @@ jobs:
   build:
     name: Bundle and Publish Sources
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [14.x]
     steps:
       - name: Checkout Branch
         uses: actions/checkout@v2
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.1.2
         with:
-          node-version: ${{matrix.node-version}}
+          node-version: 14.x
           cache: yarn
       - name: Install dependencies
         run: yarn --frozen-lockfile
+      - name: Lint project
+        run: yarn lint
+        continue-on-error: true
       - name: Generate bundle
         run: yarn bundle
       - name: Generate docs
-        run: yarn docs --out bundles/docs
+        run: yarn docs
         continue-on-error: true
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@4.1.0

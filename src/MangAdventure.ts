@@ -1,6 +1,7 @@
 import {
     Chapter,
     ChapterDetails,
+    HomeSection,
     LanguageCode,
     Manga,
     MangaStatus,
@@ -164,6 +165,39 @@ export abstract class MangAdventure extends Source {
     }
 
     /** @inheritDoc */
+    override async getHomePageSections(sectionCallback: (section: HomeSection) => void): Promise<void> {
+        const sections = [{
+            request: createRequestObject({
+                url: `${this.apiUrl}/series?sort=title`, method
+            }),
+            section: createHomeSection({
+                id: 'all',
+                title: 'All Series',
+                view_more: true
+            }),
+        }]
+        const promises = sections.map(s => {
+            sectionCallback(s.section)
+            return this.requestManager.schedule(s.request, 1)
+                .then(res => this.parseResponse<IPaginator<ISeries>>(res))
+                .then(data => {
+                    s.section.items = data.results.map(series => createMangaTile({
+                        id: series.slug,
+                        image: series.cover,
+                        title: createIconText({text: series.title})
+                    }))
+                    sectionCallback(s.section)
+                })
+        })
+        await Promise.all(promises)
+    }
+
+    /** @inheritDoc */
+    override getViewMoreItems(homepageSectionId: string, metadata: any): Promise<PagedResults> {
+        return this.getWebsiteMangaDirectory(metadata)
+    }
+
+    /** @inheritDoc */
     override async getTags(): Promise<TagSection[]> {
         if (this.categories) return [this.categories]
         const request = createRequestObject({
@@ -182,9 +216,7 @@ export abstract class MangAdventure extends Source {
     }
 
     /** @inheritDoc */
-    override getMangaShareUrl(mangaId: string): string {
-        return `${this.baseUrl}/reader/${mangaId}/`
-    }
+    override getMangaShareUrl = (mangaId: string): string => `${this.baseUrl}/reader/${mangaId}/`
 
     /**
      * Parses the given response into an object of type `T`.
@@ -200,5 +232,5 @@ export abstract class MangAdventure extends Source {
     }
 
     /** The version of the extension. */
-    static readonly version: string = '0.1.0'
+    static readonly version: string = '0.1.1'
 }
