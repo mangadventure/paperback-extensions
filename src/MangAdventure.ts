@@ -2,6 +2,7 @@ import {
     Chapter,
     ChapterDetails,
     HomeSection,
+    HomeSectionType,
     LanguageCode,
     Manga,
     MangaStatus,
@@ -19,7 +20,7 @@ import {
     IResults,
     ISeries,
 } from './Interfaces'
-import 'url-search-params-polyfill'
+import URLSearchParams from '@ungap/url-search-params'
 
 /** The HTTP method used in the API. */
 const method = 'GET'
@@ -150,7 +151,7 @@ export abstract class MangAdventure extends Source {
     override getWebsiteMangaDirectory(metadata: any): Promise<PagedResults> {
         const page = (metadata?.page ?? 0) + 1
         const request = createRequestObject({
-            url: `${this.apiUrl}/series`, method
+            url: `${this.apiUrl}/series?page=${page}`, method
         })
         return this.requestManager.schedule(request, 1)
             .then(res => this.parseResponse<IPaginator<ISeries>>(res))
@@ -167,14 +168,18 @@ export abstract class MangAdventure extends Source {
 
     /** @inheritDoc */
     override async getHomePageSections(sectionCallback: (section: HomeSection) => void): Promise<void> {
-        const section = createHomeSection({id: 'all', title: 'All Series'})
-        sectionCallback(section) // preload
+        const section = createHomeSection({
+            id: 'all',
+            title: 'All Series',
+            view_more: true,
+            type: HomeSectionType.doubleRow
+        })
+        sectionCallback(section)
         const request = createRequestObject({
-            url: `${this.apiUrl}/series?sort=title`, method
+            url: `${this.apiUrl}/series`, method
         })
         const response = await this.requestManager.schedule(request, 1)
         const data: IPaginator<ISeries> = this.parseResponse(response)
-        section.view_more = !data.last
         section.items = data.results.map(series => createMangaTile({
             id: series.slug,
             image: series.cover,
@@ -223,5 +228,5 @@ export abstract class MangAdventure extends Source {
     }
 
     /** The version of the extension. */
-    static readonly version: string = '0.1.2'
+    static readonly version: string = '0.1.3'
 }
