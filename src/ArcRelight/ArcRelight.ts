@@ -1,4 +1,4 @@
-import {ContentRating, SourceInfo} from 'paperback-extensions-common'
+import {SourceInfo} from 'paperback-extensions-common'
 import {MangAdventure} from '../MangAdventure'
 import {ISeries} from '../Interfaces'
 
@@ -9,8 +9,9 @@ export const ArcRelightInfo: SourceInfo = {
     version: MangAdventure.version,
     description: 'Extension for arc-relight.com',
     websiteBaseURL: 'https://arc-relight.com',
-    contentRating: ContentRating.EVERYONE,
+    hentaiSource: false,
     author: 'ObserverOfTime',
+    authorWebsite: 'https://github.com/ObserverOfTime'
 }
 
 /** Arc-Relight source class. */

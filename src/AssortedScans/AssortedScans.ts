@@ -1,4 +1,4 @@
-import {ContentRating, SourceInfo} from 'paperback-extensions-common'
+import {SourceInfo} from 'paperback-extensions-common'
 import {MangAdventure} from '../MangAdventure'
 
 /** Assorted Scans metadata. */
@@ -8,8 +8,9 @@ export const AssortedScansInfo: SourceInfo = {
     version: MangAdventure.version,
     description: 'Extension for assortedscans.com',
     websiteBaseURL: 'https://assortedscans.com',
-    contentRating: ContentRating.MATURE,
+    hentaiSource: false,
     author: 'ObserverOfTime',
+    authorWebsite: 'https://github.com/ObserverOfTime'
 }
 
 /** Assorted Scans source class. */

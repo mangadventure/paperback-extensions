@@ -1,4 +1,4 @@
-import {ContentRating, SourceInfo} from 'paperback-extensions-common'
+import {SourceInfo} from 'paperback-extensions-common'
 import {MangAdventure} from '../MangAdventure'
 
 /** Helvetica Scans metadata. */
@@ -8,8 +8,9 @@ export const HelveticaScansInfo: SourceInfo = {
     version: MangAdventure.version,
     description: 'Extension for helveticascans.com',
     websiteBaseURL: 'https://helveticascans.com',
-    contentRating: ContentRating.MATURE,
+    hentaiSource: false,
     author: 'ObserverOfTime',
+    authorWebsite: 'https://github.com/ObserverOfTime'
 }
 
 /** Helvetica Scans source class. */

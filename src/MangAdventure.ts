@@ -2,7 +2,6 @@ import {
     Chapter,
     ChapterDetails,
     HomeSection,
-    HomeSectionType,
     LanguageCode,
     Manga,
     MangaStatus,
@@ -43,7 +42,7 @@ export abstract class MangAdventure extends Source {
     protected get apiUrl(): string { return `${this.baseUrl}/api/v2` }
 
     /** @inheritDoc */
-    readonly requestManager = createRequestManager({requestsPerSecond: 6})
+    override readonly requestManager = createRequestManager({requestsPerSecond: 6})
 
     /**
      * Determines whether the given series is a Hentai.
@@ -111,7 +110,8 @@ export abstract class MangAdventure extends Source {
                     tags: data.categories.map(
                         id => createTag({id, label: id})
                     )
-                })] : []
+                })] : [],
+                rating: 0
             }))
     }
 
@@ -171,8 +171,7 @@ export abstract class MangAdventure extends Source {
         const section = createHomeSection({
             id: 'all',
             title: 'All Series',
-            view_more: true,
-            type: HomeSectionType.doubleRow
+            view_more: true
         })
         sectionCallback(section)
         const request = createRequestObject({
@@ -228,5 +227,5 @@ export abstract class MangAdventure extends Source {
     }
 
     /** The version of the extension. */
-    static readonly version: string = '0.1.4'
+    static readonly version: string = '0.1.5'
 }
