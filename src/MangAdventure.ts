@@ -55,7 +55,7 @@ export abstract class MangAdventure extends Source {
 
     /** @inheritDoc */
     getChapterDetails(mangaId: string, chapterId: string): Promise<ChapterDetails> {
-        const [series, volume, number] = chapterId.split('/').slice(1, 4)
+        const [series, volume, number] = chapterId.split('/').slice(2, 5)
         const params = {series, volume, number} as Record<string, string>
         const request = createRequestObject({
             url: `${this.apiUrl}/pages?${new URLSearchParams(params)}`, method
@@ -228,5 +228,5 @@ export abstract class MangAdventure extends Source {
     }
 
     /** The version of the extension. */
-    static readonly version: string = '0.1.3'
+    static readonly version: string = '0.1.4'
 }
