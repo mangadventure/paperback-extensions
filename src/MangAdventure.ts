@@ -117,23 +117,8 @@ export abstract class MangAdventure extends Source {
 
     /** @inheritDoc */
     searchRequest(query: SearchRequest, metadata: any): Promise<PagedResults> {
-        if (metadata?.last === true)
-            return Promise.resolve(createPagedResults({results: []}))
-        const page = (metadata?.page ?? 0) + 1
-        const params = new URLSearchParams({'page': page.toString()})
-        if (query.title) params.set('title', query.title)
-        if (query.author) params.set('author', query.author)
-        if (query.artist) params.set('artist', query.artist)
-        if (query.status == MangaStatus.COMPLETED)
-            params.set('status', 'completed')
-        else if (query.status == MangaStatus.ONGOING)
-            params.set('status', 'ongoing')
-        let genres: string[] = []
-        if (query.includeGenre) genres = genres.concat(query.includeGenre)
-        if (query.excludeGenre) genres = genres.concat(query.excludeGenre.map(g => '-' + g))
-        // if (query.hStatus !== undefined) genres.push((query.hStatus ? '' : '-') + 'Hentai')
-        if (genres.length > 0) params.set('categories', genres.join(','))
-        return this.getViewMoreItems('title', {params, page: page.toString()})
+        const search = {title: query.title ?? ''}
+        return this.getWebsiteMangaDirectory({...metadata, search})
     }
 
     /** @inheritDoc */
@@ -171,11 +156,18 @@ export abstract class MangAdventure extends Source {
 
     /** @inheritDoc */
     override getViewMoreItems(homepageSectionId: string, metadata: any): Promise<PagedResults> {
+        return this.getWebsiteMangaDirectory({...metadata, sort: homepageSectionId})
+    }
+
+    /** @inheritDoc */
+    override getWebsiteMangaDirectory(metadata: any): Promise<PagedResults> {
         if (metadata?.last === true)
             return Promise.resolve(createPagedResults({results: []}))
         const page = (metadata?.page ?? 0) + 1
-        const params = new URLSearchParams(metadata.params ?? {
-            page: page.toString(), sort: homepageSectionId
+        const params = new URLSearchParams({
+            ...metadata?.search,
+            page: page.toString(),
+            sort: metadata?.sort ?? 'title',
         })
         const request = createRequestObject({
             url: `${this.apiUrl}/series?${params}`, method
@@ -190,11 +182,6 @@ export abstract class MangAdventure extends Source {
                 })),
                 metadata: {page, last: data.last}
             }))
-    }
-
-    /** @inheritDoc */
-    override getWebsiteMangaDirectory(metadata: any): Promise<PagedResults> {
-        return this.getViewMoreItems('title', metadata)
     }
 
     /** @inheritDoc */
@@ -228,11 +215,11 @@ export abstract class MangAdventure extends Source {
      * @throws `Error` if the response cannot be parsed.
      */
     private parseResponse<T>(response: Response): T {
-        if (response.status != 200)
+        if (response.status !== 200)
             throw new Error(`HTTP error ${response.status}: ${response.data}`)
         return JSON.parse(response.data)
     }
 
     /** The version of the extension. */
-    static readonly version: string = '0.1.6'
+    static readonly version: string = '0.1.7'
 }
