@@ -130,7 +130,7 @@ export abstract class MangAdventure extends Source {
                 view_more: true
             }),
             createHomeSection({
-                id: '-latest_update',
+                id: '-latest_upload',
                 title: 'Latest Updates',
                 view_more: true
             })
@@ -221,5 +221,5 @@ export abstract class MangAdventure extends Source {
     }
 
     /** The version of the extension. */
-    static readonly version: string = '0.1.7'
+    static readonly version: string = '0.1.8'
 }
