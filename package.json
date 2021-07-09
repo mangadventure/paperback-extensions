@@ -1,6 +1,6 @@
 {
   "name": "extensions-mangadventure",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "repositoryName": "[PROMISES] MangAdventure Extensions",
   "repositoryLogo": "https://avatars.githubusercontent.com/u/47793439?v=4",
   "baseURL": "https://mangadventure.github.io/paperback-extensions",
@@ -28,12 +28,13 @@
     "@typescript-eslint/parser": "^4.28.2",
     "eslint": "^7.30.0",
     "eslint-plugin-modules-newline-fixed": "^0.1.1",
-    "typedoc": "^0.21.2"
+    "paperback-cli": "^1.4.0",
+    "typedoc": "^0.21.2",
+    "typescript": "^4.3.5"
   },
   "dependencies": {
-    "paperback-cli": "^1.4.0",
     "paperback-extensions-common": "^3.5.2",
-    "typescript": "^4.3.5"
+    "url-search-params-polyfill": "^8.1.1"
   },
   "eslintConfig": {
     "env": {

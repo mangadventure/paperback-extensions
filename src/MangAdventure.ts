@@ -19,6 +19,7 @@ import {
     IResults,
     ISeries,
 } from './Interfaces'
+import 'url-search-params-polyfill'
 
 /** The HTTP method used in the API. */
 const method = 'GET'
@@ -166,30 +167,20 @@ export abstract class MangAdventure extends Source {
 
     /** @inheritDoc */
     override async getHomePageSections(sectionCallback: (section: HomeSection) => void): Promise<void> {
-        const sections = [{
-            request: createRequestObject({
-                url: `${this.apiUrl}/series?sort=title`, method
-            }),
-            section: createHomeSection({
-                id: 'all',
-                title: 'All Series',
-                view_more: true
-            }),
-        }]
-        const promises = sections.map(s => {
-            sectionCallback(s.section)
-            return this.requestManager.schedule(s.request, 1)
-                .then(res => this.parseResponse<IPaginator<ISeries>>(res))
-                .then(data => {
-                    s.section.items = data.results.map(series => createMangaTile({
-                        id: series.slug,
-                        image: series.cover,
-                        title: createIconText({text: series.title})
-                    }))
-                    sectionCallback(s.section)
-                })
+        const section = createHomeSection({id: 'all', title: 'All Series'})
+        sectionCallback(section) // preload
+        const request = createRequestObject({
+            url: `${this.apiUrl}/series?sort=title`, method
         })
-        await Promise.all(promises)
+        const response = await this.requestManager.schedule(request, 1)
+        const data: IPaginator<ISeries> = this.parseResponse(response)
+        section.view_more = !data.last
+        section.items = data.results.map(series => createMangaTile({
+            id: series.slug,
+            image: series.cover,
+            title: createIconText({text: series.title})
+        }))
+        sectionCallback(section)
     }
 
     /** @inheritDoc */
@@ -232,5 +223,5 @@ export abstract class MangAdventure extends Source {
     }
 
     /** The version of the extension. */
-    static readonly version: string = '0.1.1'
+    static readonly version: string = '0.1.2'
 }
