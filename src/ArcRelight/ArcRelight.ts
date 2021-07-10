@@ -6,18 +6,21 @@ import {ISeries} from '../Interfaces'
 export const ArcRelightInfo: SourceInfo = {
     name: 'Arc-Relight',
     icon: 'icon.png',
-    version: MangAdventure.version,
+    version: '0.1.9',
     description: 'Extension for arc-relight.com',
     websiteBaseURL: 'https://arc-relight.com',
     hentaiSource: false,
-    author: 'ObserverOfTime',
-    authorWebsite: 'https://github.com/ObserverOfTime'
+    author: 'MangAdventure',
+    authorWebsite: 'https://github.com/mangadventure'
 }
 
 /** Arc-Relight source class. */
 export class ArcRelight extends MangAdventure {
     /** @inheritDoc */
     protected readonly baseUrl: string = ArcRelightInfo.websiteBaseURL
+
+    /** @inheritDoc */
+    protected readonly version: string = ArcRelightInfo.version
 
     /** @inheritDoc */
     protected override isHentai = (series: ISeries): boolean => false

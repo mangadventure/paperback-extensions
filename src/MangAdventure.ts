@@ -6,6 +6,7 @@ import {
     Manga,
     MangaStatus,
     PagedResults,
+    RequestHeaders,
     Response,
     SearchRequest,
     Source,
@@ -29,6 +30,9 @@ export abstract class MangAdventure extends Source {
     /** The base URL of the website. */
     protected abstract readonly baseUrl: string
 
+    /** The version of the extension. */
+    protected abstract readonly version: string
+
     /** The language code of the website. */
     protected readonly languageCode = LanguageCode.ENGLISH
 
@@ -39,7 +43,12 @@ export abstract class MangAdventure extends Source {
     private categories?: TagSection
 
     /** The URL of the website's API. */
-    protected get apiUrl(): string { return `${this.baseUrl}/api/v2` }
+    private get apiUrl(): string { return `${this.baseUrl}/api/v2` }
+
+    /** The headers used in the requests. */
+    private get headers(): RequestHeaders {
+        return {'user-agent': `Mozilla 5.0 (Paperback-iOS ${this.version}; Mobile)`}
+    }
 
     /** @inheritDoc */
     override readonly requestManager = createRequestManager({requestsPerSecond: 6})
@@ -55,9 +64,12 @@ export abstract class MangAdventure extends Source {
     /** @inheritDoc */
     getChapterDetails(mangaId: string, chapterId: string): Promise<ChapterDetails> {
         const [series, volume, number] = chapterId.split('/').slice(2, 5)
-        const params = {series, volume, number} as Record<string, string>
+        const params = new URLSearchParams(
+            <Record<string, string>>{series, volume, number}
+        )
         const request = createRequestObject({
-            url: `${this.apiUrl}/pages?${new URLSearchParams(params)}`, method
+            url: `${this.apiUrl}/pages?${params}`,
+            headers: this.headers, method
         })
         return this.requestManager.schedule(request, 1)
             .then(res => this.parseResponse<IResults<IPage>>(res))
@@ -72,7 +84,8 @@ export abstract class MangAdventure extends Source {
     /** @inheritDoc */
     getChapters(mangaId: string): Promise<Chapter[]> {
         const request = createRequestObject({
-            url: `${this.apiUrl}/chapters?series=${mangaId}`, method
+            url: `${this.apiUrl}/chapters?series=${mangaId}`,
+            headers: this.headers, method
         })
         return this.requestManager.schedule(request, 1)
             .then(res => this.parseResponse<IResults<IChapter>>(res))
@@ -91,7 +104,8 @@ export abstract class MangAdventure extends Source {
     /** @inheritDoc */
     getMangaDetails(mangaId: string): Promise<Manga> {
         const request = createRequestObject({
-            url: `${this.apiUrl}/series/${mangaId}`, method
+            url: `${this.apiUrl}/series/${mangaId}`,
+            headers: this.headers, method
         })
         return this.requestManager.schedule(request, 1)
             .then(res => this.parseResponse<ISeries>(res))
@@ -138,7 +152,8 @@ export abstract class MangAdventure extends Source {
         const promises = sections.map(s => {
             sectionCallback(s)
             const request = createRequestObject({
-                url: `${this.apiUrl}/series?sort=${s.id}`, method
+                url: `${this.apiUrl}/series?sort=${s.id}`,
+                headers: this.headers, method
             })
             return this.requestManager.schedule(request, 1)
                 .then(res => this.parseResponse<IPaginator<ISeries>>(res))
@@ -170,7 +185,8 @@ export abstract class MangAdventure extends Source {
             sort: metadata?.sort ?? 'title',
         })
         const request = createRequestObject({
-            url: `${this.apiUrl}/series?${params}`, method
+            url: `${this.apiUrl}/series?${params}`,
+            headers: this.headers, method
         })
         return this.requestManager.schedule(request, 1)
             .then(res => this.parseResponse<IPaginator<ISeries>>(res))
@@ -188,7 +204,8 @@ export abstract class MangAdventure extends Source {
     override getTags(): Promise<TagSection[]> {
         if (this.categories) return Promise.resolve([this.categories])
         const request = createRequestObject({
-            url: `${this.apiUrl}/categories`, method
+            url: `${this.apiUrl}/categories`,
+            headers: this.headers, method
         })
         return this.requestManager.schedule(request, 1)
             .then(res => this.parseResponse<IResults<ICategory>>(res))
@@ -219,7 +236,4 @@ export abstract class MangAdventure extends Source {
             throw new Error(`HTTP error ${response.status}: ${response.data}`)
         return JSON.parse(response.data)
     }
-
-    /** The version of the extension. */
-    static readonly version: string = '0.1.8'
 }
