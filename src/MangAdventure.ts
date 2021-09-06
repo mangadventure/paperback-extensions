@@ -2,14 +2,12 @@ import {
     Chapter,
     ChapterDetails,
     HomeSection,
-    HomeSectionType,
     LanguageCode,
     Manga,
     MangaStatus,
     PagedResults,
     RequestHeaders,
     Response,
-    SearchField,
     SearchRequest,
     Source,
     TagSection,
@@ -134,10 +132,13 @@ export abstract class MangAdventure extends Source {
     /** @inheritDoc */
     getSearchResults(query: SearchRequest, metadata: any): Promise<PagedResults> {
         const search: any = {title: query.title ?? ''}
-        if ('author' in query.parameters)
+        if (query.parameters?.author)
             search.author = query.parameters.author
-        if ('artist' in query.parameters)
+        if (query.parameters?.artist)
             search.artist = query.parameters.artist
+        const categories: string[] = []
+        query.includedTags?.forEach(t => categories.push(t.id))
+        query.excludedTags?.forEach(t => categories.push('-' + t.id))
         return this.getWebsiteMangaDirectory({...metadata, search})
     }
 
@@ -147,14 +148,12 @@ export abstract class MangAdventure extends Source {
             createHomeSection({
                 id: 'title',
                 title: 'All Series',
-                view_more: true,
-                type: HomeSectionType.featured
+                view_more: true
             }),
             createHomeSection({
                 id: '-latest_upload',
                 title: 'Latest Updates',
-                view_more: true,
-                type: HomeSectionType.doubleRow
+                view_more: true
             })
         ]
         const promises = sections.map(s => {
@@ -186,7 +185,7 @@ export abstract class MangAdventure extends Source {
     override getWebsiteMangaDirectory(metadata: any): Promise<PagedResults> {
         if (metadata?.last === true)
             return Promise.resolve(createPagedResults({results: []}))
-        const page = (metadata?.page ?? 0) + 1
+        const page: number = (metadata?.page ?? 0) + 1
         const params = new URLSearchParams({
             ...metadata?.search,
             page: page.toString(),
@@ -206,22 +205,6 @@ export abstract class MangAdventure extends Source {
                 })),
                 metadata: {page, last: data.last}
             }))
-    }
-
-    /** @inheritDoc */
-    override getSearchFields(): Promise<SearchField[]> {
-        return Promise.resolve([
-            createSearchField({
-                id: 'author',
-                name: 'Author',
-                placeholder: ''
-            }),
-            createSearchField({
-                id: 'artist',
-                name: 'Artist',
-                placeholder: ''
-            })
-        ])
     }
 
     /** @inheritDoc */
@@ -249,7 +232,7 @@ export abstract class MangAdventure extends Source {
     override getMangaShareUrl = (mangaId: string): string => `${this.baseUrl}/reader/${mangaId}/`
 
     /** @inheritDoc */
-    override supportsSearchOperators = async (): Promise<boolean> => true
+    override supportsSearchOperators = async (): Promise<boolean> => false
 
     /** @inheritDoc */
     override supportsTagExclusion = async (): Promise<boolean> => true

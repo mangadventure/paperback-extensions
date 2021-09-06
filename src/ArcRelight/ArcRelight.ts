@@ -6,7 +6,7 @@ import {ISeries} from '../Interfaces'
 export const ArcRelightInfo: SourceInfo = {
     name: 'Arc-Relight',
     icon: 'icon.png',
-    version: '0.2.0',
+    version: '0.2.1',
     description: 'Extension for arc-relight.com',
     websiteBaseURL: 'https://arc-relight.com',
     contentRating: ContentRating.EVERYONE,

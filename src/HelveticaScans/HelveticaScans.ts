@@ -5,7 +5,7 @@ import {MangAdventure} from '../MangAdventure'
 export const HelveticaScansInfo: SourceInfo = {
     name: 'Helvetica Scans',
     icon: 'icon.png',
-    version: '0.2.0',
+    version: '0.2.1',
     description: 'Extension for helveticascans.com',
     websiteBaseURL: 'https://helveticascans.com',
     contentRating: ContentRating.MATURE,
