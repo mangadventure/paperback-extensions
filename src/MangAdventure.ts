@@ -131,14 +131,9 @@ export abstract class MangAdventure extends Source {
 
     /** @inheritDoc */
     getSearchResults(query: SearchRequest, metadata: any): Promise<PagedResults> {
-        const search: any = {title: query.title ?? ''}
-        if (query.parameters?.author)
-            search.author = query.parameters.author
-        if (query.parameters?.artist)
-            search.artist = query.parameters.artist
-        const categories: string[] = []
-        query.includedTags?.forEach(t => categories.push(t.id))
-        query.excludedTags?.forEach(t => categories.push('-' + t.id))
+        const search: any = {title: query.title ?? '', categories: []}
+        query.includedTags?.forEach(t => search.categories.push(t.id))
+        query.excludedTags?.forEach(t => search.categories.push('-' + t.id))
         return this.getWebsiteMangaDirectory({...metadata, search})
     }
 
