@@ -2,12 +2,14 @@ import {
     Chapter,
     ChapterDetails,
     HomeSection,
+    HomeSectionType,
     LanguageCode,
     Manga,
     MangaStatus,
     PagedResults,
     RequestHeaders,
     Response,
+    SearchField,
     SearchRequest,
     Source,
     TagSection,
@@ -130,8 +132,12 @@ export abstract class MangAdventure extends Source {
     }
 
     /** @inheritDoc */
-    searchRequest(query: SearchRequest, metadata: any): Promise<PagedResults> {
-        const search = {title: query.title ?? ''}
+    getSearchResults(query: SearchRequest, metadata: any): Promise<PagedResults> {
+        const search: any = {title: query.title ?? ''}
+        if ('author' in query.parameters)
+            search.author = query.parameters.author
+        if ('artist' in query.parameters)
+            search.artist = query.parameters.artist
         return this.getWebsiteMangaDirectory({...metadata, search})
     }
 
@@ -141,12 +147,14 @@ export abstract class MangAdventure extends Source {
             createHomeSection({
                 id: 'title',
                 title: 'All Series',
-                view_more: true
+                view_more: true,
+                type: HomeSectionType.featured
             }),
             createHomeSection({
                 id: '-latest_upload',
                 title: 'Latest Updates',
-                view_more: true
+                view_more: true,
+                type: HomeSectionType.doubleRow
             })
         ]
         const promises = sections.map(s => {
@@ -201,7 +209,23 @@ export abstract class MangAdventure extends Source {
     }
 
     /** @inheritDoc */
-    override getTags(): Promise<TagSection[]> {
+    override getSearchFields(): Promise<SearchField[]> {
+        return Promise.resolve([
+            createSearchField({
+                id: 'author',
+                name: 'Author',
+                placeholder: ''
+            }),
+            createSearchField({
+                id: 'artist',
+                name: 'Artist',
+                placeholder: ''
+            })
+        ])
+    }
+
+    /** @inheritDoc */
+    override getSearchTags(): Promise<TagSection[]> {
         if (this.categories) return Promise.resolve([this.categories])
         const request = createRequestObject({
             url: `${this.apiUrl}/categories`,
@@ -223,6 +247,12 @@ export abstract class MangAdventure extends Source {
 
     /** @inheritDoc */
     override getMangaShareUrl = (mangaId: string): string => `${this.baseUrl}/reader/${mangaId}/`
+
+    /** @inheritDoc */
+    override supportsSearchOperators = async (): Promise<boolean> => true
+
+    /** @inheritDoc */
+    override supportsTagExclusion = async (): Promise<boolean> => true
 
     /**
      * Parses the given response into an object of type `T`.
