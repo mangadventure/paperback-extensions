@@ -5,6 +5,8 @@ import {
     LanguageCode,
     Manga,
     MangaStatus,
+    MangaTile,
+    MangaUpdates,
     PagedResults,
     RequestHeaders,
     Response,
@@ -63,9 +65,9 @@ export abstract class MangAdventure extends Source {
 
     /** @inheritDoc */
     getChapterDetails(mangaId: string, chapterId: string): Promise<ChapterDetails> {
-        const [series, volume, number] = chapterId.split('/').slice(2, 5)
+        const [slug, vol, num] = chapterId.split('/').slice(2, 5)
         const params = new URLSearchParams(
-            <Record<string, string>>{series, volume, number}
+            {series: slug!, volume: vol!, number: num!, track: 'true'}
         )
         const request = createRequestObject({
             url: `${this.apiUrl}/pages?${params}`,
@@ -112,12 +114,13 @@ export abstract class MangAdventure extends Source {
             .then(data => createManga({
                 id: data.slug,
                 image: data.cover,
-                titles: [data.title],
+                titles: [data.title, ...data.aliases!],
                 desc: data.description,
                 artist: data.artists?.join(', '),
                 author: data.authors?.join(', '),
                 hentai: this.isHentai(data),
-                status: data.completed! ? MangaStatus.COMPLETED : MangaStatus.ONGOING,
+                status: this.getStatus(data),
+                lastUpdate: new Date(data.updated),
                 tags: data.categories ? [createTagSection({
                     id: 'categories',
                     label: 'Categories',
@@ -125,6 +128,7 @@ export abstract class MangAdventure extends Source {
                         id => createTag({id, label: id})
                     )
                 })] : [],
+                views: data.views!,
                 rating: 0
             }))
     }
@@ -138,6 +142,26 @@ export abstract class MangAdventure extends Source {
     }
 
     /** @inheritDoc */
+    override async filterUpdatedManga(
+        mangaUpdatesFoundCallback: (updates: MangaUpdates) => void,
+        time: Date, ids: string[]
+    ): Promise<void> {
+        const request = createRequestObject({
+            url: `${this.apiUrl}/series`,
+            headers: this.headers, method
+        })
+        await this.requestManager.schedule(request, 1)
+            .then(res => this.parseResponse<IPaginator<ISeries>>(res))
+            .then(data => mangaUpdatesFoundCallback(
+                createMangaUpdates({
+                    ids: data.results.filter(s =>
+                        new Date(s.updated) >= time && ids.includes(s.slug)
+                    ).map(s => s.slug)
+                })
+            ))
+    }
+
+    /** @inheritDoc */
     override async getHomePageSections(sectionCallback: (section: HomeSection) => void): Promise<void> {
         const sections = [
             createHomeSection({
@@ -146,26 +170,27 @@ export abstract class MangAdventure extends Source {
                 view_more: true
             }),
             createHomeSection({
+                id: '-views',
+                title: 'Most Viewed',
+                view_more: true
+            }),
+            createHomeSection({
                 id: '-latest_upload',
                 title: 'Latest Updates',
                 view_more: true
             })
         ]
-        const promises = sections.map(s => {
-            sectionCallback(s)
+        const promises = sections.map(section => {
+            sectionCallback(section)
             const request = createRequestObject({
-                url: `${this.apiUrl}/series?sort=${s.id}`,
+                url: `${this.apiUrl}/series?sort=${section.id}`,
                 headers: this.headers, method
             })
             return this.requestManager.schedule(request, 1)
                 .then(res => this.parseResponse<IPaginator<ISeries>>(res))
                 .then(data => {
-                    s.items = data.results.map(series => createMangaTile({
-                        id: series.slug,
-                        image: series.cover,
-                        title: createIconText({text: series.title})
-                    }))
-                    return sectionCallback(s)
+                    section.items = data.results.map(this.toTile)
+                    return sectionCallback(section)
                 })
         })
         await Promise.all(promises)
@@ -193,11 +218,7 @@ export abstract class MangAdventure extends Source {
         return this.requestManager.schedule(request, 1)
             .then(res => this.parseResponse<IPaginator<ISeries>>(res))
             .then(data => createPagedResults({
-                results: data.results.map(series => createMangaTile({
-                    id: series.slug,
-                    image: series.cover,
-                    title: createIconText({text: series.title})
-                })),
+                results: data.results.map(this.toTile),
                 metadata: {page, last: data.last}
             }))
     }
@@ -231,6 +252,21 @@ export abstract class MangAdventure extends Source {
 
     /** @inheritDoc */
     override supportsTagExclusion = async (): Promise<boolean> => true
+
+    /** Returns the status of the given series. */
+    private getStatus = (series: ISeries): MangaStatus =>
+        series.licensed ? MangaStatus.ABANDONED : // closest status to licensed
+            series.completed! ? MangaStatus.COMPLETED : MangaStatus.ONGOING
+
+    /** Converts the given series to a tile. */
+    private toTile = (series: ISeries) : MangaTile => createMangaTile({
+        id: series.slug,
+        image: series.cover,
+        badge: series.chapters ?? undefined,
+        title: createIconText({text: series.title}),
+        secondaryText: series.chapters === null ?
+            createIconText({text: '[LICENSED]'}) : undefined,
+    })
 
     /**
      * Parses the given response into an object of type `T`.

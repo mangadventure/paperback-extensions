@@ -21,7 +21,7 @@
     "forceConsistentCasingInFileNames": true
   },
   "typedocOptions" : {
-    "theme": "minimal",
-    "out": "./bundles/docs"
+    "out": "./bundles/docs",
+    "entryPointStrategy": "expand"
   }
 }

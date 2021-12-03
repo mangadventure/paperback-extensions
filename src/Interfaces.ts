@@ -44,8 +44,13 @@ export interface ISeries {
     title: string
     url: string
     cover: string
+    updated: string
+    views?: number
+    chapters?: number | null
     description?: string
     completed?: boolean
+    licensed?: boolean
+    aliases?: string[]
     authors?: string[]
     artists?: string[]
     categories?: string[]

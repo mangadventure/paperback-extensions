@@ -1,6 +1,6 @@
 {
   "name": "extensions-mangadventure",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "repositoryName": "[PROMISES] MangAdventure Extensions",
   "repositoryLogo": "https://avatars.githubusercontent.com/u/47793439?v=4",
   "baseURL": "https://mangadventure.github.io/paperback-extensions",
@@ -24,17 +24,17 @@
   },
   "homepage": "https://github.com/mangadventure/paperback-extensions#readme",
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^4.30.0",
-    "@typescript-eslint/parser": "^4.30.0",
-    "eslint": "^7.32.0",
-    "eslint-plugin-modules-newline-fixed": "^0.1.1",
+    "@larry1123/eslint-plugin-modules-newline": "^1.0.0-rc.2",
+    "@typescript-eslint/eslint-plugin": "^5.5.0",
+    "@typescript-eslint/parser": "^5.5.0",
+    "eslint": "^8.3.0",
     "paperback-cli": "^1.4.0",
-    "typedoc": "^0.21.9"
+    "typedoc": "^0.22.10"
   },
   "dependencies": {
     "@ungap/url-search-params": "^0.2.2",
     "paperback-extensions-common": "^4.3.5",
-    "typescript": "^4.4.2"
+    "typescript": "^4.5.2"
   },
   "eslintConfig": {
     "env": {
@@ -51,7 +51,7 @@
       "sourceType": "module"
     },
     "plugins": [
-      "modules-newline-fixed",
+      "@larry1123/modules-newline",
       "@typescript-eslint"
     ],
     "rules": {
@@ -60,8 +60,8 @@
       "quotes": ["error", "single"],
       "semi": ["error", "never"],
       "prefer-arrow-callback": "error",
-      "modules-newline-fixed/import-declaration-newline": "warn",
-      "modules-newline-fixed/export-declaration-newline": "warn",
+      "@larry1123/modules-newline/import-declaration-newline": "warn",
+      "@larry1123/modules-newline/export-declaration-newline": "warn",
       "@typescript-eslint/explicit-module-boundary-types": "off",
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/no-non-null-assertion": "off",
