@@ -28,5 +28,5 @@ export class ArcRelight extends MangAdventure {
     protected readonly version: string = ArcRelightInfo.version
 
     /** @inheritDoc */
-    protected override isHentai = (series: ISeries): boolean => false
+    protected override isHentai = (_series: ISeries): boolean => false
 }

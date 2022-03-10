@@ -64,7 +64,7 @@ export abstract class MangAdventure extends Source {
         series.categories?.includes('Hentai') ?? false
 
     /** @inheritDoc */
-    getChapterDetails(mangaId: string, chapterId: string): Promise<ChapterDetails> {
+    async getChapterDetails(mangaId: string, chapterId: string): Promise<ChapterDetails> {
         const [slug, vol, num] = chapterId.split('/').slice(2, 5)
         const params = new URLSearchParams(
             {series: slug!, volume: vol!, number: num!, track: 'true'}
@@ -73,64 +73,64 @@ export abstract class MangAdventure extends Source {
             url: `${this.apiUrl}/pages?${params}`,
             headers: this.headers, method
         })
-        return this.requestManager.schedule(request, 1)
-            .then(res => this.parseResponse<IResults<IPage>>(res))
-            .then(data => createChapterDetails({
-                id: chapterId,
-                mangaId: mangaId,
-                longStrip: this.longStripIds.includes(mangaId),
-                pages: data.results.map(page => page.image)
-            }))
+        const res = await this.requestManager.schedule(request, 1)
+        const data = this.parseResponse<IResults<IPage>>(res)
+        return createChapterDetails({
+            id: chapterId,
+            mangaId: mangaId,
+            longStrip: this.longStripIds.includes(mangaId),
+            pages: data.results.map(page => page.image)
+        })
     }
 
     /** @inheritDoc */
-    getChapters(mangaId: string): Promise<Chapter[]> {
+    async getChapters(mangaId: string): Promise<Chapter[]> {
         const request = createRequestObject({
             url: `${this.apiUrl}/chapters?series=${mangaId}`,
             headers: this.headers, method
         })
-        return this.requestManager.schedule(request, 1)
-            .then(res => this.parseResponse<IResults<IChapter>>(res))
-            .then(data => data.results.map(chapter => createChapter({
-                id: chapter.url,
-                mangaId: chapter.series,
-                chapNum: chapter.number,
-                volume: chapter.volume || undefined,
-                name: chapter.full_title + (chapter.final ? ' [END]' : ''),
-                time: new Date(chapter.published),
-                group: chapter.groups.join(', '),
-                langCode: this.languageCode
-            })))
+        const res = await this.requestManager.schedule(request, 1)
+        const data = this.parseResponse<IResults<IChapter>>(res)
+        return data.results.map(chapter => createChapter({
+            id: chapter.url,
+            mangaId: chapter.series,
+            chapNum: chapter.number,
+            volume: chapter.volume || undefined,
+            name: chapter.full_title + (chapter.final ? ' [END]' : ''),
+            time: new Date(chapter.published),
+            group: chapter.groups.join(', '),
+            langCode: this.languageCode
+        }))
     }
 
     /** @inheritDoc */
-    getMangaDetails(mangaId: string): Promise<Manga> {
+    async getMangaDetails(mangaId: string): Promise<Manga> {
         const request = createRequestObject({
             url: `${this.apiUrl}/series/${mangaId}`,
             headers: this.headers, method
         })
-        return this.requestManager.schedule(request, 1)
-            .then(res => this.parseResponse<ISeries>(res))
-            .then(data => createManga({
-                id: data.slug,
-                image: data.cover,
-                titles: [data.title, ...data.aliases!],
-                desc: data.description,
-                artist: data.artists?.join(', '),
-                author: data.authors?.join(', '),
-                hentai: this.isHentai(data),
-                status: this.getStatus(data),
-                lastUpdate: new Date(data.updated),
-                tags: data.categories ? [createTagSection({
-                    id: 'categories',
-                    label: 'Categories',
-                    tags: data.categories.map(
-                        id => createTag({id, label: id})
-                    )
-                })] : [],
-                views: data.views!,
-                rating: 0
-            }))
+        const res = await this.requestManager.schedule(request, 1)
+        const data = this.parseResponse<ISeries>(res)
+        return createManga({
+            id: data.slug,
+            image: data.cover,
+            titles: [data.title, ...data.aliases!],
+            desc: data.description,
+            artist: data.artists?.join(', '),
+            author: data.authors?.join(', '),
+            hentai: this.isHentai(data),
+            status: this.getStatus(data),
+            lastUpdate: new Date(data.updated),
+            tags: data.categories ? [createTagSection({
+                id: 'categories',
+                label: 'Categories',
+                tags: data.categories.map(
+                    id => createTag({id, label: id})
+                )
+            })] : [],
+            views: data.views!,
+            rating: 0
+        })
     }
 
     /** @inheritDoc */
@@ -180,18 +180,16 @@ export abstract class MangAdventure extends Source {
                 view_more: true
             })
         ]
-        const promises = sections.map(section => {
+        const promises = sections.map(async section => {
             sectionCallback(section)
             const request = createRequestObject({
                 url: `${this.apiUrl}/series?sort=${section.id}`,
                 headers: this.headers, method
             })
-            return this.requestManager.schedule(request, 1)
-                .then(res => this.parseResponse<IPaginator<ISeries>>(res))
-                .then(data => {
-                    section.items = data.results.map(this.toTile)
-                    return sectionCallback(section)
-                })
+            const res = await this.requestManager.schedule(request, 1)
+            const data = this.parseResponse<IPaginator<ISeries>>(res)
+            section.items = data.results.map(this.toTile)
+            return sectionCallback(section)
         })
         await Promise.all(promises)
     }
@@ -202,7 +200,7 @@ export abstract class MangAdventure extends Source {
     }
 
     /** @inheritDoc */
-    override getWebsiteMangaDirectory(metadata: any): Promise<PagedResults> {
+    override async getWebsiteMangaDirectory(metadata: any): Promise<PagedResults> {
         if (metadata?.last === true)
             return Promise.resolve(createPagedResults({results: []}))
         const page: number = (metadata?.page ?? 0) + 1
@@ -215,33 +213,31 @@ export abstract class MangAdventure extends Source {
             url: `${this.apiUrl}/series?${params}`,
             headers: this.headers, method
         })
-        return this.requestManager.schedule(request, 1)
-            .then(res => this.parseResponse<IPaginator<ISeries>>(res))
-            .then(data => createPagedResults({
-                results: data.results.map(this.toTile),
-                metadata: {page, last: data.last}
-            }))
+        const res = await this.requestManager.schedule(request, 1)
+        const data = this.parseResponse<IPaginator<ISeries>>(res)
+        return createPagedResults({
+            results: data.results.map(this.toTile),
+            metadata: {page, last: data.last}
+        })
     }
 
     /** @inheritDoc */
-    override getSearchTags(): Promise<TagSection[]> {
-        if (this.categories) return Promise.resolve([this.categories])
+    override async getSearchTags(): Promise<TagSection[]> {
+        if (this.categories) return [this.categories]
         const request = createRequestObject({
             url: `${this.apiUrl}/categories`,
             headers: this.headers, method
         })
-        return this.requestManager.schedule(request, 1)
-            .then(res => this.parseResponse<IResults<ICategory>>(res))
-            .then(data => {
-                this.categories = createTagSection({
-                    id: 'categories',
-                    label: 'Categories',
-                    tags: data.results.map(c => createTag({
-                        id: c.name, label: c.name
-                    }))
-                })
-                return [this.categories]
-            })
+        const res = await this.requestManager.schedule(request, 1)
+        const data = this.parseResponse<IResults<ICategory>>(res)
+        this.categories = createTagSection({
+            id: 'categories',
+            label: 'Categories',
+            tags: data.results.map(c => createTag({
+                id: c.name, label: c.name
+            }))
+        })
+        return [this.categories]
     }
 
     /** @inheritDoc */
