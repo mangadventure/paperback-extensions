@@ -65,12 +65,8 @@ export abstract class MangAdventure extends Source {
 
     /** @inheritDoc */
     async getChapterDetails(mangaId: string, chapterId: string): Promise<ChapterDetails> {
-        const [slug, vol, num] = chapterId.split('/').slice(2, 5)
-        const params = new URLSearchParams(
-            {series: slug!, volume: vol!, number: num!, track: 'true'}
-        )
         const request = createRequestObject({
-            url: `${this.apiUrl}/pages?${params}`,
+            url: `${this.apiUrl}/chapters/${chapterId}/pages?track=true`,
             headers: this.headers, method
         })
         const res = await this.requestManager.schedule(request, 1)
@@ -86,13 +82,13 @@ export abstract class MangAdventure extends Source {
     /** @inheritDoc */
     async getChapters(mangaId: string): Promise<Chapter[]> {
         const request = createRequestObject({
-            url: `${this.apiUrl}/chapters?series=${mangaId}`,
+            url: `${this.apiUrl}/series/${mangaId}/chapters`,
             headers: this.headers, method
         })
         const res = await this.requestManager.schedule(request, 1)
         const data = this.parseResponse<IResults<IChapter>>(res)
         return data.results.map(chapter => createChapter({
-            id: chapter.url,
+            id: chapter.id.toString(),
             mangaId: chapter.series,
             chapNum: chapter.number,
             volume: chapter.volume || undefined,
