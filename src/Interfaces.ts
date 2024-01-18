@@ -54,4 +54,5 @@ export interface ISeries {
     authors?: string[]
     artists?: string[]
     categories?: string[]
+    status?: 'ongoing' | 'completed' | 'hiatus' | 'canceled'
 }

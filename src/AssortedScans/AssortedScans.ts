@@ -9,7 +9,7 @@ import {MangAdventure} from '../MangAdventure'
 export const AssortedScansInfo: SourceInfo = {
     name: 'Assorted Scans',
     icon: 'icon.png',
-    version: '0.3.2',
+    version: '0.4.0',
     description: 'Extension for assortedscans.com',
     websiteBaseURL: 'https://assortedscans.com',
     contentRating: ContentRating.MATURE,
