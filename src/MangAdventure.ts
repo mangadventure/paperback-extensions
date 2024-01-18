@@ -246,9 +246,21 @@ export abstract class MangAdventure extends Source {
     override supportsTagExclusion = async (): Promise<boolean> => true
 
     /** Returns the status of the given series. */
-    private getStatus = (series: ISeries): MangaStatus =>
-        series.licensed ? MangaStatus.ABANDONED : // closest status to licensed
-            series.completed! ? MangaStatus.COMPLETED : MangaStatus.ONGOING
+    private getStatus(series: ISeries): MangaStatus {
+        if (series.licensed) return MangaStatus.ABANDONED
+        switch (series.status) {
+            case 'ongoing':
+                return MangaStatus.ONGOING
+            case 'completed':
+                return MangaStatus.COMPLETED
+            case 'hiatus':
+                return MangaStatus.HIATUS
+            case 'canceled':
+                return MangaStatus.ABANDONED
+            default:
+                return MangaStatus.UNKNOWN
+        }
+    }
 
     /** Converts the given series to a tile. */
     private toTile = (series: ISeries) : MangaTile => createMangaTile({
