@@ -1,10 +1,6 @@
-bundles
-
-#compiled sources
-build
-docs
-
-.idea
+# compiled sources
+bundles/
+tmp/
 
 # mac stuff
 .DS_Store

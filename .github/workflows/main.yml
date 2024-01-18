@@ -8,16 +8,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Setup Node.js environment
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: 14.x
+          node-version: 18.x
       - name: Install dependencies
         run: yarn --frozen-lockfile
       - name: Lint project
         run: yarn lint
         continue-on-error: true
+      - name: Run tests
+        run: yarn test
       - name: Generate bundle
         run: yarn bundle
       - name: Generate docs

@@ -29,7 +29,7 @@ export interface IChapter {
     id: number
     title: string
     number: number
-    volume: number
+    volume: number | null
     published: string
     final: boolean
     series: string
@@ -54,4 +54,5 @@ export interface ISeries {
     authors?: string[]
     artists?: string[]
     categories?: string[]
+    status?: 'ongoing' | 'completed' | 'hiatus' | 'canceled'
 }

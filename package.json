@@ -1,17 +1,18 @@
 {
   "name": "extensions-mangadventure",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "repositoryName": "MangAdventure Extensions",
   "repositoryLogo": "https://avatars.githubusercontent.com/u/47793439?v=4",
   "baseURL": "https://mangadventure.github.io/paperback-extensions",
-  "description": "Contains scanlation sources using the MangAdventure framework",
+  "description": "Contains scanlation sources that use the MangAdventure framework",
   "files": ["src/", "tsconfig.json"],
   "private": true,
   "scripts": {
     "lint": "eslint src",
     "docs": "typedoc src",
     "bundle": "paperback bundle",
-    "serve": "paperback serve"
+    "serve": "paperback serve",
+    "test": "paperback test"
   },
   "repository": {
     "type": "git",
@@ -25,16 +26,16 @@
   "homepage": "https://github.com/mangadventure/paperback-extensions#readme",
   "devDependencies": {
     "@larry1123/eslint-plugin-modules-newline": "^1.0.0-rc.2",
-    "@typescript-eslint/eslint-plugin": "~5.33.1",
-    "@typescript-eslint/parser": "~5.33.1",
-    "eslint": "^8.22.0",
-    "paperback-cli": "^1.4.0",
-    "typedoc": "~0.22.18"
+    "@typescript-eslint/eslint-plugin": "~6.19.0",
+    "@typescript-eslint/parser": "~6.19.0",
+    "eslint": "^8.56.0",
+    "paperback-cli": "^2.0.0-alpha.13",
+    "typedoc": "~0.25.7"
   },
   "dependencies": {
     "@ungap/url-search-params": "^0.2.2",
-    "paperback-extensions-common": "^4.3.5",
-    "typescript": "^4.7.4"
+    "paperback-extensions-common": "^5.0.0-alpha.7",
+    "typescript": "^5.3.3"
   },
   "eslintConfig": {
     "env": {
