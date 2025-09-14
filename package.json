@@ -30,7 +30,7 @@
   "homepage": "https://mangadventure.github.io/paperback-extensions/",
   "devDependencies": {
     "@eslint/js": "^9.35.0",
-    "@paperback/toolchain": "^0.8.7",
+    "@paperback/toolchain": "^1.0.0-alpha.57",
     "eslint": "~9.35.0",
     "eslint-plugin-module-bindings-newline": "^1.0.1",
     "typedoc": "~0.28.12",
