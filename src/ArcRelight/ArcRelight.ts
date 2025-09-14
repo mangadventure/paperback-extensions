@@ -1,22 +1,22 @@
 import {
     ContentRating,
-    SourceInfo,
-    TagType
-} from 'paperback-extensions-common'
-import {MangAdventure} from '../MangAdventure'
-import {ISeries} from '../Interfaces'
+    type SourceInfo,
+    SourceIntents,
+} from '@paperback/types'
+import { type ISeries } from '../Interfaces'
+import { MangAdventure } from '../MangAdventure'
 
 /** Arc-Relight metadata. */
 export const ArcRelightInfo: SourceInfo = {
     name: 'Arc-Relight',
     icon: 'icon.png',
-    version: '0.4.0',
+    version: '0.5.0',
     description: 'Extension for arc-relight.com',
     websiteBaseURL: 'https://arc-relight.com',
     contentRating: ContentRating.EVERYONE,
     author: 'MangAdventure',
     authorWebsite: 'https://github.com/mangadventure',
-    sourceTags: [{text: 'Notifications', type: TagType.GREEN}]
+    intents: SourceIntents.HOMEPAGE_SECTIONS | SourceIntents.MANGA_CHAPTERS,
 }
 
 /** Arc-Relight source class. */

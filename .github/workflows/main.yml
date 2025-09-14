@@ -1,33 +1,50 @@
 name: Bundle and Publish Sources
+
 on:
   push:
     branches: [master]
+
+concurrency:
+  group: ${{github.workflow}}-${{github.ref}}
+  cancel-in-progress: true
+
 jobs:
-  build:
-    name: Bundle and Publish Sources
+  bundle:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Setup Node.js environment
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: 18.x
+          node-version: 22.x
+          cache-dependency-path: package-lock.json
       - name: Install dependencies
-        run: yarn --frozen-lockfile
+        run: npm ci
       - name: Lint project
-        run: yarn lint
+        run: npm run lint
         continue-on-error: true
       - name: Run tests
-        run: yarn test
+        run: npm test ArcRelight && npm test AssortedScans
       - name: Generate bundle
-        run: yarn bundle
+        run: npm run bundle
       - name: Generate docs
-        run: yarn docs
+        run: npm run docs
         continue-on-error: true
-      - name: Deploy to GitHub Pages
-        uses: JamesIves/github-pages-deploy-action@v4
+      - name: Upload bundle artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          branch: gh-pages
-          folder: bundles
-          single-commit: true
+          path: bundles
+  publish:
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{steps.deploy.outputs.page_url}}
+    runs-on: ubuntu-latest
+    needs: bundle
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4
